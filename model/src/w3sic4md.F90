@@ -39,8 +39,10 @@
 !         2) Meylan et al. GRL 2014
 !         3) Kohout & Meylan JGR 2008 in Horvat & Tziperman Cryo. 2015
 !         4) Kohout et al. Nature 2014 
-!         5) Doble et al. GRL 2015
-!         6) Rogers et al. JGR 2016
+!         5) Rogers et al. JGR 2016 (step function)
+!         6) Rogers et al. JGR 2016 (namelist step function)
+!         7) Doble et al. GRL 2015
+!         8) Sutherland et al. AOR 2019
 !     Documentation of IC4:
 !         1) Collins and Rogers, NRL Memorandum report 2017
 !         ---> "A Source Term for Wave Attenuation by Sea 
@@ -70,7 +72,7 @@
 !/
       CONTAINS
 !/ ------------------------------------------------------------------- /
-      SUBROUTINE W3SIC4 (A, DEPTH, CG, IX, IY, S, D)
+      SUBROUTINE W3SIC4 (A, DEPTH, CG, WN, IX, IY, S, D)
 !/
 !/                  +-----------------------------------+
 !/                  | WAVEWATCH III           NOAA/NCEP |
@@ -88,6 +90,9 @@
 !/    08-Apr-2016 : Method 6 added (namelist step funct.) (E. Rogers)
 !/    24-Feb-2017 : Corrections to Methods 1,2,3,4        (E. Rogers)
 !/    13-Apr-2017 : Method 7 added (Doble et al. 2015)    (E. Rogers)
+!/    31-Jan-2020 : Method 8 added (Sutherland et al. 2019). Also added
+!wavenumber to input so this is also changed in gx_outp.ftn and
+!w3srcemd.ftn>
 !/
 !/        FIXME   : Move field input to W3SRCE and provide
 !/     (S.Zieger)   input parameter to W3SIC1 to make the subroutine
@@ -198,6 +203,14 @@
 !        ALPHA  = 0.2*(T^(-2.13)*HICE or
 !        ALPHA  = 0.2*(FREQ^2.13)*HICE
 !
+!     8) Sutherland et al. (AOR 2019)
+!        function of ice thickness and ice concentration
+!        Going to assume deepwater dispersion relation
+!        for the time being as it's simpler. Will update in the future
+!        WN_I = 0.25 * (E*HICE) * SIG * WN / CG
+!        where E is the fractional thickness where wave motion is
+!        present. E=1 is a maximum value.
+!
 !     More verbose description of implementation of Sice in WW3:
 !      See documentation for IC1
 !
@@ -211,6 +224,7 @@
 !       A       R.A.  I   Action density spectrum (1-D)
 !       DEPTH   Real  I   Local water depth
 !       CG      R.A.  I   Group velocities.
+!       WN      R.A.  I   Wavenumbers.
 !       IX,IY   I.S.  I   Grid indices.
 !       S       R.A.  O   Source term (1-D version).
 !       D       R.A.  O   Diagonal term of derivative (1-D version).
@@ -297,7 +311,7 @@
 !/
 !/ ------------------------------------------------------------------- /
 !/ Parameter list
-      REAL, INTENT(IN)        :: CG(NK),   A(NSPEC), DEPTH
+      REAL, INTENT(IN)        :: CG(NK), WN(NK), A(NSPEC), DEPTH
       REAL, INTENT(OUT)       :: S(NSPEC), D(NSPEC)
       INTEGER, INTENT(IN)     :: IX, IY
 !/
@@ -514,6 +528,13 @@
            END DO
            WN_I= 0.5 * ALPHA
 
+        CASE (8) ! Sutherland et al. (AOR 2019)
+           HICE = ICECOEF1 ! for this method, ICECOEF1=ice thickness
+           !HICE = HICE*EXP(-PI*ICECONC) ! scale by a function based on
+           !ice concentration. Scale factor must be be from 0 to 1.
+           DO IK=1, NK
+              WN_I(IK) = 0.25*HICE*WN(IK)*SIG(IK)/CG(IK)
+           END DO
         CASE DEFAULT
           WN_I = ICECOEF1 !Default to IC1: Uniform in k
       

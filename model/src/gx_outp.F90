@@ -1224,7 +1224,7 @@
                 CALL W3SIC3 ( A, DEPTH, CG,  WN, IX, IY, XBT, DIA )
 #endif
 #ifdef W3_IC4
-                CALL W3SIC4 ( A, DEPTH, CG,      IX, IY, XBT, DIA ) 
+                CALL W3SIC4 ( A, DEPTH, CG,  WN, IX, IY, XBT, DIA ) 
 #endif
 #ifdef W3_IC5
                 CALL W3SIC5 ( A, DEPTH, CG,  WN, IX, IY, XBT, DIA )
