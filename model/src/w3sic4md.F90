@@ -529,9 +529,9 @@
            WN_I= 0.5 * ALPHA
 
         CASE (8) ! Sutherland et al. (AOR 2019)
-           HICE = ICECOEF1 ! for this method, ICECOEF1=ice thickness
+           HICE = 0.01*ICECOEF1 ! for this method, ICECOEF1=ice thickness
            !HICE = HICE*EXP(-PI*ICECONC) ! scale by a function based on
-           !ice concentration. Scale factor must be be from 0 to 1.
+           !ice concentration. Scale factor must be be from 0 to 1. Set to 0.01 for now.
            DO IK=1, NK
               WN_I(IK) = 0.25*HICE*WN(IK)*SIG(IK)/CG(IK)
            END DO
